@@ -29,7 +29,7 @@
           <i class="fa fa-chevron-circle-left" aria-hidden="true"></i>
           Prev Page
         </button>
-        <button @click="changePage('up')" class="btn btn-primary" :class="{'ml-2': this.currentPage > 1}">
+        <button v-if="products.length" @click="changePage('up')" class="btn btn-primary" :class="{'ml-2': this.currentPage > 1}">
           Next Page
           <i class="fa fa-chevron-circle-right" aria-hidden="true"></i>
         </button>
