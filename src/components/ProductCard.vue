@@ -42,8 +42,11 @@
           </div>
         </div>
         <div class="mt-3">
-          <a class="medium-size text-primary link" href="" @click.prevent="addToCart(product)">
+          <a v-if="!isInCart" class="medium-size text-primary link" href="" @click.prevent="addToCart(product)">
             <i class="fa fa-cart-plus" aria-hidden="true"></i> ADD TO CART
+          </a>
+          <a v-else class="medium-size text-danger link" href="" @click.prevent="removeFromCart(product)">
+            <i class="fa fa-cart-arrow-down" aria-hidden="true"></i> REMOVE
           </a>
         </div>
       </div>
@@ -77,6 +80,9 @@ export default {
       } else {
         return false
       }
+    },
+    isInCart () {
+      return this.$store.state.cart.some(i => JSON.stringify(i) === JSON.stringify(this.product))
     }
   },
   created () {
@@ -87,10 +93,14 @@ export default {
   },
   methods: {
     ...mapMutations({
-      add: 'addToCart' // `this.add()` would call `this.$store.commit('addToCart')`
+      add: 'addToCart', // `this.add()` would call `this.$store.commit('addToCart')`
+      remove: 'removeFromCart' // `this.remove()` would call `this.$store.commit('removeToCart')`
     }),
     addToCart (product) {
       this.add(product)
+    },
+    removeFromCart (product) {
+      this.remove(product)
     },
     readAll () {
       this.readAllActive = true

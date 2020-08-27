@@ -5,10 +5,10 @@
         <div class="col-6">
           <h3 class="font-weight-bold">{{ selectedCategory }}</h3>
         </div>
-        <div class="col-6 text-right">
-          <a href="" class="font-weight-bold">
-            <i class="fa fa-shopping-cart" aria-hidden="true"></i> View Cart
-          </a>
+        <div class="col-6 align-self-center text-right">
+          <router-link to="/cart" class="font-weight-bold">
+            <i class="fa fa-shopping-cart" aria-hidden="true"></i> View Cart <span v-if="cartLength">({{ cartLength }})</span>
+          </router-link>
         </div>
       </div>
       <div class="mt-3">
@@ -58,6 +58,11 @@ export default {
     selectedCategory: 'All',
     categories: ['All', 'IG', 'TT']
   }),
+  computed: {
+    cartLength () {
+      return this.$store.state.cart.length
+    }
+  },
   async created () {
     if (this.$route.query.page || this.$route.query.keyword) {
       if (this.$route.query.keyword) {
