@@ -16,8 +16,15 @@
         <h5 class='card-title mt-1 mb-0'>
           {{ product['Lot #'] }}
         </h5>
-        <p class="card-text text-muted mt-2">
-          {{ product['Description'] }}
+        <p v-if="product['Description']" class="card-text text-muted mt-2">
+          <span>{{ description }}</span>
+          <span v-if="description !== product['Description'] && !readAllActive">
+            ...
+            <a class="text-primary pointer font-weight-medium" @click.prevent="readAll">
+              Read all
+            </a>
+          </span>
+          <span v-show="readAllActive">{{ seoDescription }}</span>
         </p>
       </div>
       <div class="card-footer">
@@ -58,6 +65,11 @@ export default {
       required: true
     }
   },
+  data: () => ({
+    readAllActive: false,
+    description: '',
+    seoDescription: ''
+  }),
   computed: {
     videoLink () {
       if (this.product.Video && this.product.Video.includes('dl=0')) {
@@ -67,12 +79,21 @@ export default {
       }
     }
   },
+  created () {
+    if (this.product.Description) {
+      this.description = this.product.Description.slice(0, 120)
+      this.seoDescription = this.product.Description.slice(120, this.product.Description.length)
+    }
+  },
   methods: {
     ...mapMutations({
       add: 'addToCart' // `this.add()` would call `this.$store.commit('addToCart')`
     }),
     addToCart (product) {
       this.add(product)
+    },
+    readAll () {
+      this.readAllActive = true
     }
   }
 }

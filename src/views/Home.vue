@@ -3,7 +3,7 @@
     <div>
       <div class="row">
         <div class="col-6">
-          <h3 class="font-weight-bold">All</h3>
+          <h3 class="font-weight-bold">{{ selectedCategory }}</h3>
         </div>
         <div class="col-6 text-right">
           <a href="" class="font-weight-bold">
@@ -18,7 +18,7 @@
       </div>
       <transition name="fade">
         <div class="mt-2" v-if="isCategoriesShow">
-          <a class="mr-3 categories-link-item" href="" v-for="item of categories" :key="item">{{ item }}</a>
+          <a class="mr-3 categories-link-item" :class="{ 'categories-link-item-active': item === selectedCategory}" href="" @click.prevent="searchByCategory(item)" v-for="item of categories" :key="item">{{ item }}</a>
         </div>
       </transition>
     </div>
@@ -29,7 +29,7 @@
           <i class="fa fa-chevron-circle-left" aria-hidden="true"></i>
           Prev Page
         </button>
-        <button v-if="products.length" @click="changePage('up')" class="btn btn-primary" :class="{'ml-2': this.currentPage > 1}">
+        <button v-if="products.length > 80" @click="changePage('up')" class="btn btn-primary" :class="{'ml-2': this.currentPage > 1}">
           Next Page
           <i class="fa fa-chevron-circle-right" aria-hidden="true"></i>
         </button>
@@ -55,26 +55,53 @@ export default {
     isLoaded: false,
     currentPage: 1,
     products: [],
-    categories: ['All', 'Javascript', 'Python']
+    selectedCategory: 'All',
+    categories: ['All', 'IG', 'TT']
   }),
   async created () {
-    if (this.$route.query.page) {
+    if (this.$route.query.page || this.$route.query.keyword) {
+      if (this.$route.query.keyword) {
+        this.selectedCategory = this.$route.query.keyword
+      }
       this.currentPage = this.$route.query.page
+      this.getProducts(this.$route.query)
+    } else {
+      const result = await fetch(`https://limitless-mountain-18309.herokuapp.com/all?page=${this.currentPage}`)
+      this.products = await result.json()
+      this.isLoaded = true
     }
-    const result = await fetch(`https://limitless-mountain-18309.herokuapp.com/all?page=${this.currentPage}`)
-    this.products = await result.json()
-    this.isLoaded = true
   },
   methods: {
-    async changePage (direction) {
+    changePage (direction) {
       if (direction === 'up') {
         this.currentPage++
       } else {
         this.currentPage--
       }
-      this.$router.push({ query: { page: this.currentPage } })
+      this.$router.push({ query: Object.assign({}, this.$route.query, { page: this.currentPage }) })
+      this.getProducts(this.$route.query)
+    },
+    searchByCategory (item) {
+      if (this.selectedCategory !== item) {
+        let requestKeyword
+        this.selectedCategory = item
+        this.currentPage = 1
+        if (item === 'All') {
+          requestKeyword = ''
+        } else {
+          requestKeyword = item
+        }
+        this.$router.push({ query: { page: this.currentPage, keyword: requestKeyword } })
+        this.getProducts(this.$route.query)
+      }
+    },
+    async getProducts (query) {
+      let queryString = ''
+      for (const [key, value] of Object.entries(query)) {
+        queryString += `${key}=${value}&`
+      }
       this.isLoaded = false
-      const result = await fetch(`https://limitless-mountain-18309.herokuapp.com/all?page=${this.currentPage}`)
+      const result = await fetch(`https://limitless-mountain-18309.herokuapp.com/all?${queryString}`)
       this.products = await result.json()
       this.isLoaded = true
     }
@@ -102,6 +129,10 @@ export default {
   .categories-link-item {
     text-decoration: none !important;
     color: rgba(0,0,0,0.4) !important;
+  }
+
+  .categories-link-item-active {
+    color: black !important;
   }
 
   .arrow {
