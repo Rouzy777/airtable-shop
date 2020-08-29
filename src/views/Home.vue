@@ -6,7 +6,7 @@
           <h3 class="font-weight-bold">{{ selectedCategory }}</h3>
         </div>
         <div class="col-6 align-self-center text-right">
-          <router-link to="/cart" class="font-weight-bold">
+          <router-link to="/cart" class="font-weight-bold link">
             <i class="fa fa-shopping-cart" aria-hidden="true"></i> View Cart <span v-if="cartLength">({{ cartLength }})</span>
           </router-link>
         </div>
@@ -56,7 +56,7 @@ export default {
     currentPage: 1,
     products: [],
     selectedCategory: 'All',
-    categories: ['All', 'IG', 'TT']
+    categories: ['All']
   }),
   computed: {
     cartLength () {
@@ -64,6 +64,7 @@ export default {
     }
   },
   async created () {
+    this.getCategories()
     if (this.$route.query.page || this.$route.query.keyword) {
       if (this.$route.query.keyword) {
         this.selectedCategory = this.$route.query.keyword
@@ -109,6 +110,10 @@ export default {
       const result = await fetch(`https://limitless-mountain-18309.herokuapp.com/all?${queryString}`)
       this.products = await result.json()
       this.isLoaded = true
+    },
+    async getCategories () {
+      const result = await fetch('https://limitless-mountain-18309.herokuapp.com/selectViews')
+      this.categories = [...this.categories, ...await result.json()]
     }
   }
 }

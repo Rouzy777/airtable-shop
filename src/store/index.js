@@ -10,10 +10,15 @@ export default new Vuex.Store({
   mutations: {
     addToCart (state, product) {
       state.cart.push(product)
+      sessionStorage.cart = JSON.stringify(state.cart)
     },
     removeFromCart (state, product) {
       const index = state.cart.indexOf(product)
       state.cart.splice(index, 1)
+      sessionStorage.cart = JSON.stringify(state.cart)
+    },
+    restoreCart (state, cartMemory) {
+      state.cart = JSON.parse(cartMemory)
     }
   },
   actions: {
