@@ -55,7 +55,20 @@
         <div class="border rounded p-3">
           <div class="row mt-3">
             <div class="col">
-              <input class="form-control">
+              <stripe-elements
+                ref="elementsRef"
+                :pk="publishableKey"
+                :amount="totalSum"
+                class="col-lg-6 px-0"
+                locale="en"
+                @token="tokenCreated"
+                @loading="loading = $event"
+              >
+              </stripe-elements>
+              <small class="text-muted">You agree to pay <span class="font-weight-bold">${{totalSum}}</span>. Your purchase is handled securely with Stripe. We do not save your credit card information.</small>
+              <div class="">
+                <button class="btn btn-primary mt-3" @click="submit">PAY WITH CREDIT CARD</button>
+              </div>
             </div>
           </div>
         </div>
@@ -82,8 +95,13 @@
 </template>
 
 <script>
+import { StripeElements } from 'vue-stripe-checkout'
+
 export default {
   name: 'Cart',
+  components: {
+    StripeElements
+  },
   data: () => ({
     customer: {
       name: '',
@@ -91,7 +109,11 @@ export default {
       address1: '',
       address2: ''
     },
+    loading: false,
+    publishableKey: 'pk_live_lp4AR0OUNJSqh8uMgDJ5gEAe00AR4zcSCx',
     products: [],
+    token: null,
+    charge: null,
     totalSum: 0
   }),
   computed: {
@@ -102,6 +124,30 @@ export default {
   created () {
     this.products = this.$store.state.cart
     this.totalSum = this.products.reduce(function (acc, obj) { return acc + Math.round(obj['Final Price']) }, 0)
+  },
+  methods: {
+    submit () {
+      this.$refs.elementsRef.submit()
+    },
+    tokenCreated (token) {
+      this.token = token
+      let description = ''
+      for (const item of this.products) {
+        description += `Product name: ${item['Lot #']}, Price: ${item['Final Price']}; `
+      }
+      // for additional charge objects go to https://stripe.com/docs/api/charges/object
+      this.charge = {
+        source: token.id,
+        amount: this.totalSum * 100, // the amount you want to charge the customer in cents. $100 is 1000 (it is strongly recommended you use a product id and quantity and get calculate this on the backend to avoid people manipulating the cost)
+        description // optional description that will show up on stripe when looking at payments
+      }
+      this.sendTokenToServer(this.charge)
+    },
+    sendTokenToServer (charge) {
+      // Send to charge to your backend server to be processed
+      // Documentation here: https://stripe.com/docs/api/charges/create
+
+    }
   }
 }
 </script>
