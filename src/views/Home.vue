@@ -23,7 +23,7 @@
       </transition>
     </div>
     <div v-if="isLoaded" class="row mx-auto col-12 my-3 px-0">
-      <ProductCard v-for="(item, i) of products" :key="`${item['Lot #']}-${i}`" :product="item" />
+      <ProductCard v-for="(item, i) of products" :key="`${item['Lot #']}-${i}`" :product="item" :vendor="selectedCategory" />
       <div class="col-12 text-center pr-4 pl-0">
         <button v-if="currentPage > 1" @click="changePage('down')" class="btn mr-2 btn-primary">
           <i class="fa fa-chevron-circle-left" aria-hidden="true"></i>
@@ -36,7 +36,7 @@
       </div>
     </div>
     <div v-else>
-      <Loader class="mt-5" />
+      <Loader class="mt-5 justify-content-center" />
     </div>
   </section>
 </template>
@@ -55,16 +55,20 @@ export default {
     isLoaded: false,
     currentPage: 1,
     products: [],
-    selectedCategory: 'All',
-    categories: ['All']
+    selectedCategory: '',
+    categories: []
   }),
   computed: {
     cartLength () {
-      return this.$store.state.cart.length
+      let total = 0
+      for (const vendor of this.$store.state.cart) {
+        total += vendor.products.length
+      }
+      return total
     }
   },
   async created () {
-    this.getCategories()
+    await this.getCategories()
     if (this.$route.query.page || this.$route.query.keyword) {
       if (this.$route.query.keyword) {
         this.selectedCategory = this.$route.query.keyword
@@ -72,7 +76,7 @@ export default {
       this.currentPage = this.$route.query.page
       this.getProducts(this.$route.query)
     } else {
-      const result = await fetch(`https://limitless-mountain-18309.herokuapp.com/all?page=${this.currentPage}`)
+      const result = await fetch(`https://limitless-mountain-18309.herokuapp.com/all?page=${this.currentPage}&keyword=${this.categories[0]}`)
       this.products = await result.json()
       this.isLoaded = true
     }
@@ -89,15 +93,9 @@ export default {
     },
     searchByCategory (item) {
       if (this.selectedCategory !== item) {
-        let requestKeyword
         this.selectedCategory = item
         this.currentPage = 1
-        if (item === 'All') {
-          requestKeyword = ''
-        } else {
-          requestKeyword = item
-        }
-        this.$router.push({ query: { page: this.currentPage, keyword: requestKeyword } })
+        this.$router.push({ query: { page: this.currentPage, keyword: item } })
         this.getProducts(this.$route.query)
       }
     },
@@ -113,7 +111,8 @@ export default {
     },
     async getCategories () {
       const result = await fetch('https://limitless-mountain-18309.herokuapp.com/selectViews')
-      this.categories = [...this.categories, ...await result.json()]
+      this.categories = await result.json()
+      this.selectedCategory = this.categories[0]
     }
   }
 }
@@ -122,14 +121,6 @@ export default {
 <style media="screen">
   .font-weight-medium {
     font-weight: 500;
-  }
-
-  .fade-enter-active, .fade-leave-active {
-    transition: opacity .3s;
-  }
-
-  .fade-enter, .fade-leave-to {
-    opacity: 0;
   }
 
   .link {

@@ -15,12 +15,27 @@
         </div>
       </div>
     </div>
-    <div v-if="cartLength" class="row mx-auto col-12 my-3 px-0">
-      <ProductCard v-for="(item, i) of products" :key="`${item['Lot #']}-${i}`" :product="item" />
+    <div v-if="cartLength" class="pb-3">
+      <div v-for="vendor of vendors" :key="vendor.vendor" class="mt-4">
+        <div v-if="vendor.products.length">
+          <h2 class="vendor-title text-muted">
+            {{ vendor.vendor }}
+          </h2>
+          <div class="row mx-auto col-12 px-0 mt-3">
+            <ProductCard v-for="(item, i) of vendor.products" :key="`${item['Lot #']}-${i}`" :product="item" :vendor="vendor.vendor" />
+          </div>
+        </div>
+      </div>
       <div class="w-100 py-3 text-right border-top">
         <p>
           Total:
           <span class="font-weight-bold">${{ totalSum }}</span>
+        </p>
+        <p v-if="!shipping" class="font-weight-bold text-success">
+          <i class="fa fa-truck" aria-hidden="true"></i> FREE SHIPPING
+        </p>
+        <p v-else>
+          <i class="fa fa-truck" aria-hidden="true"></i> Shipping: <span class="font-weight-bold">${{ shipping }}</span>
         </p>
         <router-link tag="button" class="btn btn-success font-weight-bold" to="/checkout">
           CHECKOUT
@@ -45,24 +60,48 @@ export default {
     ProductCard
   },
   data: () => ({
-    products: [],
-    totalSum: 0
+    vendors: []
   }),
   computed: {
     cartLength () {
-      return this.$store.state.cart.length
+      let total = 0
+      for (const vendor of this.$store.state.cart) {
+        total += vendor.products.length
+      }
+      return total
+    },
+    totalSum () {
+      return this.$store.state.totalSum
+    },
+    shipping () {
+      return this.$store.state.shipping
     }
   },
   created () {
-    this.products = this.$store.state.cart
-  },
-  watch: {
-    products: {
-      handler: function (newProducts) {
-        this.totalSum = newProducts.reduce(function (acc, obj) { return acc + Math.round(obj['Final Price']) }, 0)
-      }
-    }
+    this.vendors = this.$store.state.cart
+    this.$store.commit('calculateSum')
   }
+  // watch: {
+  //   vendors: {
+  //     handler: function (newData) {
+  //       let total = 0
+  //       this.shipping = 0
+  //       for (const item of newData) {
+  //         const vendorSum = item.products.reduce(function (acc, obj) { return acc + Math.round(obj['Final Price']) }, 0)
+  //         total += vendorSum
+  //         if (vendorSum < 100) {
+  //           this.shipping += 15
+  //         }
+  //       }
+  //       this.totalSum = total + this.shipping
+  //       // this.totalSum = newData.reduce(function (acc, obj) { return acc + Math.round(obj['Final Price']) }, 0)
+  //       // if (this.totalSum < 100) {
+  //       //   this.shipping = 15
+  //       // }
+  //     },
+  //     deep: true
+  //   }
+  // }
 }
 </script>
 
@@ -73,5 +112,9 @@ export default {
 
   .link {
     text-decoration: none !important;
+  }
+
+  .vendor-title {
+    font-size: 24px;
   }
 </style>

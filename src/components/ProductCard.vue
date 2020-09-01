@@ -66,6 +66,10 @@ export default {
     product: {
       type: Object,
       required: true
+    },
+    vendor: {
+      type: String,
+      required: true
     }
   },
   data: () => ({
@@ -82,7 +86,12 @@ export default {
       }
     },
     isInCart () {
-      return this.$store.state.cart.some(i => JSON.stringify(i) === JSON.stringify(this.product))
+      const vendorIndex = this.$store.state.cart.findIndex(i => i.vendor === this.vendor)
+      if (vendorIndex !== -1) {
+        return this.$store.state.cart[vendorIndex].products.some(i => JSON.stringify(i) === JSON.stringify(this.product))
+      } else {
+        return false
+      }
     }
   },
   created () {
@@ -97,10 +106,12 @@ export default {
       remove: 'removeFromCart' // `this.remove()` would call `this.$store.commit('removeToCart')`
     }),
     addToCart (product) {
-      this.add(product)
+      const fullProductData = { ...product, vendor: this.vendor }
+      this.add(fullProductData)
     },
     removeFromCart (product) {
-      this.remove(product)
+      const fullProductData = { ...product, vendor: this.vendor }
+      this.remove(fullProductData)
     },
     readAll () {
       this.readAllActive = true
