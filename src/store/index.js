@@ -43,7 +43,7 @@ export default new Vuex.Store({
       for (const item of state.cart) {
         const vendorSum = item.products.reduce(function (acc, obj) { return acc + Math.round(obj['Final Price']) }, 0)
         state.totalSum += vendorSum
-        if (vendorSum < 100) {
+        if (vendorSum < 100 && vendorSum !== 0) {
           state.shipping += 15
         }
       }

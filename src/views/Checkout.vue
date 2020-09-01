@@ -133,7 +133,7 @@ export default {
     isLoading: false,
     isPurchased: false,
     publishableKey: 'pk_test_51HIXxmJh065ah3GR1L16eFe1Lgc0Et14Spn4d68RQAPCXlAot15XWpOs92v3OoaPHk5kYP1XP8UYyzg9x4viXzc900q7fSv5r5',
-    products: [],
+    vendors: [],
     token: null,
     charge: null
   }),
@@ -176,7 +176,7 @@ export default {
   },
   created () {
     if (this.cartLength) {
-      this.products = this.$store.state.cart
+      this.vendors = this.$store.state.cart
       this.$store.commit('calculateSum')
     } else {
       this.isPurchased = true
@@ -193,10 +193,15 @@ export default {
     tokenCreated (token) {
       this.token = token
       let description = ''
-      for (const item of this.products) {
-        description += `Product name: ${item['Lot #']}, Price: $${item['Final Price']}; `
+      for (const vendor of this.vendors) {
+        if (vendor.products.length) {
+          description += `Vendor: ${vendor.vendor}, `
+          for (const item of vendor.products) {
+            description += `Product: ${item['Lot #']}, Price: $${item['Final Price']}; `
+          }
+        }
       }
-      description += `Shipping Cost: ${this.shipping}`
+      description += `Shipping Cost: $${this.shipping}`
       this.charge = {
         source: token.id,
         receipt_email: this.customer.email,
