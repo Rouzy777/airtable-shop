@@ -22,7 +22,7 @@
             {{ vendor.vendor }}
           </h2>
           <div class="row mx-auto col-12 px-0 mt-3">
-            <ProductCard v-for="(item, i) of vendor.products" :key="`${item['Lot #']}-${i}`" :product="item" :vendor="vendor.vendor" />
+            <ProductCard v-for="(item, i) of vendor.products" :key="`${item['lot #']}-${i}`" :productRaw="item" :vendor="vendor.vendor" />
           </div>
         </div>
       </div>

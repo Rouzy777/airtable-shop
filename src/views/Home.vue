@@ -3,7 +3,7 @@
     <div>
       <div class="row">
         <div class="col-6">
-          <h3 class="font-weight-bold">{{ selectedCategory }}</h3>
+          <h3 class="font-weight-bold">{{ selectedCategory.name }}</h3>
         </div>
         <div class="col-6 align-self-center text-right">
           <router-link to="/cart" class="font-weight-bold link">
@@ -18,12 +18,12 @@
       </div>
       <transition name="fade">
         <div class="mt-2" v-if="isCategoriesShow">
-          <a class="mr-3 categories-link-item" :class="{ 'categories-link-item-active': item === selectedCategory}" href="" @click.prevent="searchByCategory(item)" v-for="item of categories" :key="item">{{ item }}</a>
+          <a class="mr-3 categories-link-item" :class="{ 'categories-link-item-active': item.name === selectedCategory.name}" href="" @click.prevent="searchByCategory(item)" v-for="item of categories" :key="item.name">{{ item.name }}</a>
         </div>
       </transition>
     </div>
     <div v-if="isLoaded" class="row mx-auto col-12 my-3 px-0">
-      <ProductCard v-for="(item, i) of products" :key="`${item['Lot #']}-${i}`" :product="item" :vendor="selectedCategory" />
+      <ProductCard v-for="(item, i) of products" :key="`${item['Lot #']}-${i}`" :productRaw="item" :vendor="selectedCategory.name" />
       <div class="col-12 text-center pr-4 pl-0">
         <button v-if="currentPage > 1" @click="changePage('down')" class="btn mr-2 btn-primary">
           <i class="fa fa-chevron-circle-left" aria-hidden="true"></i>
@@ -68,15 +68,19 @@ export default {
     }
   },
   async created () {
-    await this.getCategories()
+    await this.getVendors()
     if (this.$route.query.page || this.$route.query.keyword) {
       if (this.$route.query.keyword) {
-        this.selectedCategory = this.$route.query.keyword
+        this.selectedCategory = this.categories.find(i => i.name === this.$route.query.keyword)
       }
       this.currentPage = this.$route.query.page
-      this.getProducts(this.$route.query)
+      this.getProducts({
+        page: this.currentPage,
+        keyword: this.selectedCategory.name,
+        baseid: this.selectedCategory.id
+      })
     } else {
-      const result = await fetch(`https://limitless-mountain-18309.herokuapp.com/all?page=${this.currentPage}&keyword=${this.categories[0]}`)
+      const result = await fetch('https://limitless-mountain-18309.herokuapp.com/all')
       this.products = await result.json()
       this.isLoaded = true
     }
@@ -89,14 +93,22 @@ export default {
         this.currentPage--
       }
       this.$router.push({ query: Object.assign({}, this.$route.query, { page: this.currentPage }) })
-      this.getProducts(this.$route.query)
+      this.getProducts({
+        page: this.currentPage,
+        keyword: this.selectedCategory.name,
+        baseid: this.selectedCategory.id
+      })
     },
     searchByCategory (item) {
       if (this.selectedCategory !== item) {
         this.selectedCategory = item
         this.currentPage = 1
-        this.$router.push({ query: { page: this.currentPage, keyword: item } })
-        this.getProducts(this.$route.query)
+        this.$router.push({ query: { page: this.currentPage, keyword: item.name } })
+        this.getProducts({
+          page: this.currentPage,
+          keyword: item.name,
+          baseid: item.id
+        })
       }
     },
     async getProducts (query) {
@@ -109,7 +121,7 @@ export default {
       this.products = await result.json()
       this.isLoaded = true
     },
-    async getCategories () {
+    async getVendors () {
       const result = await fetch('https://limitless-mountain-18309.herokuapp.com/selectViews')
       this.categories = await result.json()
       this.selectedCategory = this.categories[0]
