@@ -11,16 +11,32 @@
           </router-link>
         </div>
       </div>
-      <div class="mt-3">
-        <a class="link font-weight-medium" href="" @click.prevent="isCategoriesShow = !isCategoriesShow">
-          View Vendors <i class="arrow" :class="{ 'up': isCategoriesShow, 'down': !isCategoriesShow}"></i>
-        </a>
-      </div>
-      <transition name="fade">
-        <div class="mt-2" v-if="isCategoriesShow">
-          <a class="mr-3 categories-link-item" :class="{ 'categories-link-item-active': item.name === selectedCategory.name}" href="" @click.prevent="searchByCategory(item)" v-for="item of categories" :key="item.name">{{ item.name }}</a>
+      <div class="mx-auto row mt-3">
+        <div class="col-12 px-0">
+          <div>
+            <a class="link font-weight-medium" href="" @click.prevent="isCategoriesShow = !isCategoriesShow">
+              View Vendors <i class="arrow" :class="{ 'up-arrow': isCategoriesShow, 'down-arrow': !isCategoriesShow}"></i>
+            </a>
+          </div>
+          <transition name="fade">
+            <div class="mt-2" v-if="isCategoriesShow">
+              <a class="mr-3 categories-link-item" :class="{ 'categories-link-item-active': item.name === selectedCategory.name}" href="" @click.prevent="searchByCategory(item)" v-for="item of categories" :key="item.name">{{ item.name }}</a>
+            </div>
+          </transition>
         </div>
-      </transition>
+        <div class="col-12 px-0 mt-3">
+          <div>
+            <a class="link font-weight-medium" href="" @click.prevent="isShowDatesOpen = !isShowDatesOpen">
+              Show Dates <i class="arrow" :class="{ 'up-arrow': isShowDatesOpen, 'down-arrow': !isShowDatesOpen}"></i>
+            </a>
+          </div>
+          <transition name="fade">
+            <div class="mt-2" v-if="isShowDatesOpen">
+              <a class="mr-3 categories-link-item" :class="{ 'categories-link-item-active': item === selectedShowDate}" href="" @click.prevent="searchByShowDate(item)" v-for="item of showDates" :key="item">{{ item }}</a>
+            </div>
+          </transition>
+        </div>
+      </div>
     </div>
     <div v-if="isLoaded" class="row mx-auto col-12 my-3 px-0">
       <ProductCard v-for="(item, i) of products" :key="`${item['Lot #']}-${i}`" :productRaw="item" :vendor="selectedCategory" />
@@ -52,10 +68,13 @@ export default {
   },
   data: () => ({
     isCategoriesShow: false,
+    isShowDatesOpen: false,
     isLoaded: false,
     currentPage: 1,
     products: [],
+    selectedShowDate: '',
     selectedCategory: '',
+    showDates: [],
     categories: []
   }),
   computed: {
@@ -69,15 +88,20 @@ export default {
   },
   async created () {
     await this.getVendors()
+    this.getShowDates()
     if (this.$route.query.page || this.$route.query.keyword) {
       if (this.$route.query.keyword) {
         this.selectedCategory = this.categories.find(i => i.name === this.$route.query.keyword)
+      }
+      if (this.$route.query.date) {
+        this.selectedShowDate = this.$route.query.date
       }
       this.currentPage = this.$route.query.page
       this.getProducts({
         page: this.currentPage,
         keyword: this.selectedCategory.name,
-        baseid: this.selectedCategory.id
+        baseid: this.selectedCategory.id,
+        date: this.selectedShowDate
       })
     } else {
       const result = await fetch('https://limitless-mountain-18309.herokuapp.com/all')
@@ -96,18 +120,41 @@ export default {
       this.getProducts({
         page: this.currentPage,
         keyword: this.selectedCategory.name,
-        baseid: this.selectedCategory.id
+        baseid: this.selectedCategory.id,
+        date: this.selectedShowDate
+      })
+    },
+    setShowDate () {
+      this.getProducts({
+        page: this.currentPage,
+        keyword: this.selectedCategory.name,
+        baseid: this.selectedCategory.id,
+        date: this.selectedShowDate
       })
     },
     searchByCategory (item) {
       if (this.selectedCategory !== item) {
         this.selectedCategory = item
         this.currentPage = 1
+        this.selectedShowDate = ''
         this.$router.push({ query: { page: this.currentPage, keyword: item.name } })
         this.getProducts({
           page: this.currentPage,
           keyword: item.name,
           baseid: item.id
+        })
+      }
+    },
+    searchByShowDate (item) {
+      if (this.selectedShowDate !== item) {
+        this.selectedShowDate = item
+        this.currentPage = 1
+        this.$router.push({ query: { page: this.currentPage, keyword: this.selectedCategory.name, date: item } })
+        this.getProducts({
+          page: this.currentPage,
+          keyword: this.selectedCategory.name,
+          baseid: this.selectedCategory.id,
+          date: this.selectedShowDate
         })
       }
     },
@@ -125,6 +172,10 @@ export default {
       const result = await fetch('https://limitless-mountain-18309.herokuapp.com/selectViews')
       this.categories = await result.json()
       this.selectedCategory = this.categories[0]
+    },
+    async getShowDates () {
+      const result = await fetch('https://limitless-mountain-18309.herokuapp.com/getShowDates')
+      this.showDates = await result.json()
     }
   }
 }
@@ -156,13 +207,13 @@ export default {
     padding: 3px;
   }
 
-  .down {
+  .down-arrow {
     margin-bottom: 3px;
     transform: rotate(45deg);
     -webkit-transform: rotate(45deg);
   }
 
-  .up {
+  .up-arrow {
     margin-top: 5px;
     transform: rotate(-135deg);
     -webkit-transform: rotate(-135deg);

@@ -27,16 +27,6 @@
         </div>
       </div>
       <div class="w-100 py-3 text-right border-top">
-        <p>
-          Total:
-          <span class="font-weight-bold">${{ totalSum }} CAD</span>
-        </p>
-        <p v-if="!shipping" class="font-weight-bold text-success">
-          <i class="fa fa-truck" aria-hidden="true"></i> FREE SHIPPING
-        </p>
-        <p v-else>
-          <i class="fa fa-truck" aria-hidden="true"></i> Shipping: <span class="font-weight-bold">${{ shipping }} CAD</span>
-        </p>
         <div v-if="shipping" class="col-lg-6 px-0 mb-3 ml-auto">
           <small class="text-muted">Free Shipping Code</small>
           <div class="input-group free-shipping-code ml-auto">
@@ -49,6 +39,16 @@
             {{ errorCodeMessage }}
           </small>
         </div>
+        <p v-if="!shipping" class="font-weight-bold text-success">
+          <i class="fa fa-truck" aria-hidden="true"></i> FREE SHIPPING
+        </p>
+        <p v-else>
+          <i class="fa fa-truck" aria-hidden="true"></i> Shipping: <span class="font-weight-bold">${{ shipping }} CAD</span>
+        </p>
+        <p>
+          Total:
+          <span class="font-weight-bold">${{ totalSum }} CAD</span>
+        </p>
         <router-link tag="button" class="btn btn-success font-weight-bold" to="/checkout">
           CHECKOUT
         </router-link>
