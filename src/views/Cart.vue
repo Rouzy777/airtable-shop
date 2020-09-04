@@ -16,10 +16,10 @@
       </div>
     </div>
     <div v-if="cartLength" class="pb-3">
-      <div v-for="vendor of vendors" :key="vendor.vendor" class="mt-4">
+      <div v-for="vendor of vendors" :key="vendor.vendor.name" class="mt-4">
         <div v-if="vendor.products.length">
           <h2 class="vendor-title text-muted">
-            {{ vendor.vendor }}
+            {{ vendor.vendor.name }}
           </h2>
           <div class="row mx-auto col-12 px-0 mt-3">
             <ProductCard v-for="(item, i) of vendor.products" :key="`${item['lot #']}-${i}`" :productRaw="item" :vendor="vendor.vendor" />
@@ -29,14 +29,26 @@
       <div class="w-100 py-3 text-right border-top">
         <p>
           Total:
-          <span class="font-weight-bold">${{ totalSum }}</span>
+          <span class="font-weight-bold">${{ totalSum }} CAD</span>
         </p>
         <p v-if="!shipping" class="font-weight-bold text-success">
           <i class="fa fa-truck" aria-hidden="true"></i> FREE SHIPPING
         </p>
         <p v-else>
-          <i class="fa fa-truck" aria-hidden="true"></i> Shipping: <span class="font-weight-bold">${{ shipping }}</span>
+          <i class="fa fa-truck" aria-hidden="true"></i> Shipping: <span class="font-weight-bold">${{ shipping }} CAD</span>
         </p>
+        <div v-if="shipping" class="col-lg-6 px-0 mb-3 ml-auto">
+          <small class="text-muted">Free Shipping Code</small>
+          <div class="input-group free-shipping-code ml-auto">
+            <input v-model="code" class="form-control">
+            <div class="input-group-append">
+              <button class="btn btn-primary" @click="checkShippingCode(code)">OK</button>
+            </div>
+          </div>
+          <small v-if="errorCodeMessage" class="text-danger">
+            {{ errorCodeMessage }}
+          </small>
+        </div>
         <router-link tag="button" class="btn btn-success font-weight-bold" to="/checkout">
           CHECKOUT
         </router-link>
@@ -53,6 +65,7 @@
 
 <script>
 import ProductCard from '@/components/ProductCard'
+import { mapMutations, mapActions } from 'vuex'
 
 export default {
   name: 'Cart',
@@ -60,7 +73,8 @@ export default {
     ProductCard
   },
   data: () => ({
-    vendors: []
+    vendors: [],
+    code: ''
   }),
   computed: {
     cartLength () {
@@ -75,11 +89,25 @@ export default {
     },
     shipping () {
       return this.$store.state.shipping
+    },
+    errorCodeMessage () {
+      return this.$store.state.errorCodeMessage
     }
   },
   created () {
     this.vendors = this.$store.state.cart
-    this.$store.commit('calculateSum')
+    this.calculateSum()
+    if (sessionStorage.code) {
+      this.checkShippingCode(sessionStorage.code)
+    }
+  },
+  methods: {
+    ...mapMutations([
+      'calculateSum'
+    ]),
+    ...mapActions([
+      'checkShippingCode'
+    ])
   }
   // watch: {
   //   vendors: {
@@ -116,5 +144,9 @@ export default {
 
   .vendor-title {
     font-size: 24px;
+  }
+
+  .free-shipping-code {
+    width: 150px;
   }
 </style>

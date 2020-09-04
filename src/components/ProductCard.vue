@@ -68,7 +68,7 @@ export default {
       required: true
     },
     vendor: {
-      type: String,
+      type: Object,
       required: true
     }
   },
@@ -91,7 +91,7 @@ export default {
       }
     },
     isInCart () {
-      const vendorIndex = this.$store.state.cart.findIndex(i => i.vendor === this.vendor)
+      const vendorIndex = this.$store.state.cart.findIndex(i => i.vendor.name === this.vendor.name)
       if (vendorIndex !== -1) {
         return this.$store.state.cart[vendorIndex].products.some(i => JSON.stringify(i) === JSON.stringify(this.product))
       } else {

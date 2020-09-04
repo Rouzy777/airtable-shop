@@ -13,7 +13,7 @@
       </div>
       <div class="mt-3">
         <a class="link font-weight-medium" href="" @click.prevent="isCategoriesShow = !isCategoriesShow">
-          View Categories <i class="arrow" :class="{ 'up': isCategoriesShow, 'down': !isCategoriesShow}"></i>
+          View Vendors <i class="arrow" :class="{ 'up': isCategoriesShow, 'down': !isCategoriesShow}"></i>
         </a>
       </div>
       <transition name="fade">
@@ -23,7 +23,7 @@
       </transition>
     </div>
     <div v-if="isLoaded" class="row mx-auto col-12 my-3 px-0">
-      <ProductCard v-for="(item, i) of products" :key="`${item['Lot #']}-${i}`" :productRaw="item" :vendor="selectedCategory.name" />
+      <ProductCard v-for="(item, i) of products" :key="`${item['Lot #']}-${i}`" :productRaw="item" :vendor="selectedCategory" />
       <div class="col-12 text-center pr-4 pl-0">
         <button v-if="currentPage > 1" @click="changePage('down')" class="btn mr-2 btn-primary">
           <i class="fa fa-chevron-circle-left" aria-hidden="true"></i>

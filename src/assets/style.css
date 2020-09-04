@@ -1,3 +1,19 @@
 .VueCarousel-dot-container, .VueCarousel-dot {
   margin-top: 0 !important;
 }
+
+.VueCarousel-dot:focus {
+  outline: none !important;
+}
+
+.VueCarousel-dot:nth-child(2) {
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.VueCarousel-dot:nth-child(2)::before {
+  position: absolute;
+  bottom: 3px;
+  font-family: FontAwesome;
+  content: "\f03d";
+}
