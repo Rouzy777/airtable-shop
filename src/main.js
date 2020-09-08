@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import VueLazyload from 'vue-lazyload'
+import VueMeta from 'vue-meta'
 import Vuelidate from 'vuelidate'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'font-awesome/css/font-awesome.min.css'
@@ -10,6 +11,7 @@ import router from './router'
 import store from './store'
 
 Vue.use(VueLazyload)
+Vue.use(VueMeta)
 Vue.use(Vuelidate)
 
 Vue.config.productionTip = false

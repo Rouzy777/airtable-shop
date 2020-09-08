@@ -1,5 +1,8 @@
 <template>
-  <section>
+  <section class="content">
+    <div class="floating">
+      <FloatingCart />
+    </div>
     <div>
       <div class="row">
         <div class="col-6">
@@ -15,7 +18,7 @@
         <div class="col-12 px-0">
           <div>
             <a class="link font-weight-medium" href="" @click.prevent="isCategoriesShow = !isCategoriesShow">
-              View Vendors <i class="arrow" :class="{ 'up-arrow': isCategoriesShow, 'down-arrow': !isCategoriesShow}"></i>
+              Select Vendor <i class="arrow" :class="{ 'up-arrow': isCategoriesShow, 'down-arrow': !isCategoriesShow}"></i>
             </a>
           </div>
           <transition name="fade">
@@ -24,17 +27,22 @@
             </div>
           </transition>
         </div>
-        <div class="col-12 px-0 mt-3">
-          <div>
-            <a class="link font-weight-medium" href="" @click.prevent="isShowDatesOpen = !isShowDatesOpen">
-              Show Dates <i class="arrow" :class="{ 'up-arrow': isShowDatesOpen, 'down-arrow': !isShowDatesOpen}"></i>
-            </a>
-          </div>
-          <transition name="fade">
-            <div class="mt-2" v-if="isShowDatesOpen">
-              <a class="mr-3 categories-link-item" :class="{ 'categories-link-item-active': item === selectedShowDate}" href="" @click.prevent="searchByShowDate(item)" v-for="item of showDates" :key="item">{{ item }}</a>
+        <div class="row col-12 px-0 mt-3">
+          <div class="col-lg-6">
+            <div>
+              <a class="link font-weight-medium" href="" @click.prevent="isShowDatesOpen = !isShowDatesOpen">
+                Select Show Dates <i class="arrow" :class="{ 'up-arrow': isShowDatesOpen, 'down-arrow': !isShowDatesOpen}"></i>
+              </a>
             </div>
-          </transition>
+            <transition name="fade">
+              <div class="mt-2" v-if="isShowDatesOpen">
+                <a class="mr-3 categories-link-item" :class="{ 'categories-link-item-active': item === selectedShowDate}" href="" @click.prevent="searchByShowDate(item)" v-for="item of showDates" :key="item">{{ item }}</a>
+              </div>
+            </transition>
+          </div>
+          <div class="col-lg-6 text-lg-right mt-lg-0 mt-3">
+            <JoinBtn />
+          </div>
         </div>
       </div>
     </div>
@@ -51,26 +59,46 @@
         </button>
       </div>
     </div>
-    <div v-else>
+    <div class="min-vh-80" v-else>
       <Loader class="mt-5 justify-content-center" />
     </div>
+    <Footer />
   </section>
 </template>
 
 <script>
 import ProductCard from '@/components/ProductCard'
+import FloatingCart from '@/components/FloatingCart'
+import JoinBtn from '@/components/JoinBtn'
 import Loader from '@/components/Loader'
+import Footer from '@/components/Footer'
 
 export default {
   name: 'Home',
+  metaInfo () {
+    return {
+      meta: [
+        { vmid: 'og:url', property: 'og:url', content: 'https://rouzy777.github.io/airtable-shop/' },
+        { vmid: 'og:title', property: 'og:title', content: this.ogConfig.title },
+        { vmid: 'og:description', property: 'og:description', content: this.ogConfig.description },
+        { vmid: 'og:image', property: 'og:image', content: this.ogConfigImage }
+      ]
+    }
+  },
   components: {
-    ProductCard, Loader
+    ProductCard,
+    FloatingCart,
+    Loader,
+    JoinBtn,
+    Footer
   },
   data: () => ({
     isCategoriesShow: false,
     isShowDatesOpen: false,
     isLoaded: false,
     currentPage: 1,
+    ogConfig: [],
+    ogConfigImage: '',
     products: [],
     selectedShowDate: '',
     selectedCategory: '',
@@ -87,12 +115,13 @@ export default {
     }
   },
   async created () {
+    this.getOGConfig()
     await this.getVendors()
-    this.getShowDates()
     if (this.$route.query.page || this.$route.query.keyword) {
       if (this.$route.query.keyword) {
         this.selectedCategory = this.categories.find(i => i.name === this.$route.query.keyword)
       }
+      this.getShowDates(this.selectedCategory)
       if (this.$route.query.date) {
         this.selectedShowDate = this.$route.query.date
       }
@@ -134,6 +163,7 @@ export default {
     },
     searchByCategory (item) {
       if (this.selectedCategory !== item) {
+        this.getShowDates(item)
         this.selectedCategory = item
         this.currentPage = 1
         this.selectedShowDate = ''
@@ -173,9 +203,19 @@ export default {
       this.categories = await result.json()
       this.selectedCategory = this.categories[0]
     },
-    async getShowDates () {
-      const result = await fetch('https://limitless-mountain-18309.herokuapp.com/getShowDates')
+    async getShowDates (vendor) {
+      this.showDates = []
+      let queryString = ''
+      if (vendor) {
+        queryString = `vendor=${vendor.id}`
+      }
+      const result = await fetch(`https://limitless-mountain-18309.herokuapp.com/getShowDates?${queryString}`)
       this.showDates = await result.json()
+    },
+    async getOGConfig () {
+      const result = await fetch('https://limitless-mountain-18309.herokuapp.com/getOGConfig')
+      this.ogConfig = (await result.json())[0]
+      this.ogConfigImage = this.ogConfig.image[0].url
     }
   }
 }
@@ -184,6 +224,24 @@ export default {
 <style media="screen">
   .font-weight-medium {
     font-weight: 500;
+  }
+
+  .floating {
+    z-index: 9999;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    visibility: hidden;
+  }
+
+  @media screen and (max-width: 992px) {
+    .floating {
+      visibility: visible;
+    }
+  }
+
+  .min-vh-80 {
+    min-height: 80vh;
   }
 
   .link {
