@@ -3,10 +3,10 @@
     <div class="card h-100 px-0 col-md-12">
       <carousel :per-page="1" :adjustableHeight="videoLink !== false" :minSwipeDistance="50">
         <slide v-if="product.picture">
-          <img class="card-img-top" v-lazy="product.picture[0].thumbnails.large.url" alt="Image">
+          <img class="card-img-top" v-img="{'src': product.picture[0].thumbnails.large.url, 'title': product['lot #']}" v-lazy="product.picture[0].thumbnails.large.url" alt="Image">
         </slide>
         <slide v-if="product.video">
-          <video class="card-img-top" controls>
+          <video class="card-img-top video" controls>
             <source :src="videoLink" type="video/mp4">
             Your browser does not support the video tag.
           </video>
@@ -38,7 +38,7 @@
             </small>
           </div>
           <div class="mt-auto" :class="{'pt-3': !product['disc %'], 'ml-2': product['disc %']}">
-            <h5 class="mb-0">$ {{ Math.round(product['final price']) }}</h5>
+            <h5 class="mb-0">$ {{ product['final price'].toFixed(2) }}</h5>
           </div>
         </div>
         <div class="mt-3">
@@ -100,7 +100,7 @@ export default {
     }
   },
   created () {
-    if (this.product.description) {
+    if (this.product.description) { // cut description
       this.description = this.product.description.slice(0, 120)
       this.seoDescription = this.product.description.slice(120, this.product.description.length)
     }

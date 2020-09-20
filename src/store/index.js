@@ -43,7 +43,7 @@ export default new Vuex.Store({
       state.totalSum = 0
       state.shipping = 0
       for (const item of state.cart) {
-        const vendorSum = item.products.reduce(function (acc, obj) { return acc + Math.round(obj['final price']) }, 0)
+        const vendorSum = item.products.reduce(function (acc, obj) { return acc + obj['final price'] }, 0)
         state.totalSum += vendorSum
         if (vendorSum < 100 && vendorSum !== 0 && state.code === '') {
           state.shipping += 15
@@ -71,29 +71,29 @@ export default new Vuex.Store({
     async checkShippingCode ({ commit }, code) {
       commit('setErrorMessage', '')
       try {
-        const result = await fetch(`https://limitless-mountain-18309.herokuapp.com/checkFreeShipping?code=${code}`)
+        const result = await fetch(`https://indigem.ca/checkFreeShipping?code=${code}`)
         const codeObject = await result.json()
         if (codeObject && codeObject.used.toLowerCase() === 'no') {
           commit('setFreeShipping', code)
           commit('calculateSum')
         } else {
-          commit('setErrorMessage', `Code ${code} already used`)
+          commit('setErrorMessage', `Code ${code} is disabled`)
         }
       } catch (e) {
         commit('setErrorMessage', `Code ${code} not found`)
         throw e
       }
     },
-    async activateShippingCode ({ commit, state }) {
-      // eslint-disable-next-line
-      const result = await fetch(`https://limitless-mountain-18309.herokuapp.com/activateFreeShipping?code=${state.code}`)
-    },
+    // async activateShippingCode ({ commit, state }) {
+    //   // eslint-disable-next-line
+    //   const result = await fetch(`https://indigem.ca/activateFreeShipping?code=${state.code}`)
+    // },
     async setBuyerName ({ state }, charge) {
       const headers = {
         'Content-Type': 'application/json'
       }
       // eslint-disable-next-line
-      const result = await fetch('https://limitless-mountain-18309.herokuapp.com/setBuyerName', {
+      const result = await fetch('https://indigem.ca/setBuyerName', {
         method: 'POST',
         headers,
         body: JSON.stringify(charge)

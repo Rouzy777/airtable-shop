@@ -17,3 +17,35 @@
   font-family: FontAwesome;
   content: "\f03d";
 }
+
+.fb_dialog_content iframe, .fb-customerchat iframe {
+  right: 0 !important;
+  left: 0 !important;
+}
+
+.fb_customer_chat_bounce_in_v2 {
+  animation-name: fb_bounce_in_v3 !important;
+}
+
+.fb_customer_chat_bounce_out_v2 {
+  animation-duration: 1ms !important;
+}
+
+@keyframes fb_bounce_in_v3 {
+  0% {
+      opacity: 0;
+      transform: scale(0, 0);
+      transform-origin: bottom left;
+  }
+
+  50% {
+      transform: scale(1.03, 1.03);
+      transform-origin: bottom left;
+  }
+
+  100% {
+      opacity: 1;
+      transform: scale(1, 1);
+      transform-origin: bottom left;
+  }
+}

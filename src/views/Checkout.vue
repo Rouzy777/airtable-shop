@@ -146,7 +146,7 @@ import { email, required } from 'vuelidate/lib/validators'
 import { mapActions } from 'vuex'
 
 export default {
-  name: 'Cart',
+  name: 'Checkout',
   components: {
     StripeElements, Loader
   },
@@ -163,7 +163,7 @@ export default {
     },
     isLoading: false,
     isPurchased: false,
-    publishableKey: 'pk_test_51HIXxmJh065ah3GR1L16eFe1Lgc0Et14Spn4d68RQAPCXlAot15XWpOs92v3OoaPHk5kYP1XP8UYyzg9x4viXzc900q7fSv5r5',
+    publishableKey: 'pk_live_lp4AR0OUNJSqh8uMgDJ5gEAe00AR4zcSCx',
     vendors: [],
     token: null,
     charge: null
@@ -212,22 +212,22 @@ export default {
       return this.$store.state.totalSum
     },
     subtotal () {
-      return this.totalSumWithoutGst - this.shipping
+      return (this.totalSumWithoutGst - this.shipping).toFixed(2)
     },
     shipping () {
-      return this.$store.state.shipping
+      return this.$store.state.shipping.toFixed(2)
     },
     code () {
       return this.$store.state.code
     },
     gst () {
-      return ((this.subtotal / 100) * 5).toFixed(1)
+      return ((this.subtotal / 100) * 5).toFixed(2)
     },
     totalSum () {
       if (this.customer.region === 'CA') {
-        return Number(this.totalSumWithoutGst) + Number(this.gst)
+        return +(Number(this.totalSumWithoutGst) + Number(this.gst)).toFixed(2)
       } else {
-        return Number(this.totalSumWithoutGst)
+        return +(Number(this.totalSumWithoutGst)).toFixed(2)
       }
     }
   },
@@ -255,7 +255,7 @@ export default {
       }
       this.$refs.elementsRef.submit()
     },
-    tokenCreated (token) {
+    async tokenCreated (token) {
       this.token = token
       let description = ''
       for (const vendor of this.vendors) {
@@ -286,7 +286,10 @@ export default {
           state: this.customer.state
         }
       }
-      this.sendTokenToServer(this.charge)
+      const isAlreadyBought = await this.checkAlreadyBought(this.vendors)
+      if (isAlreadyBought === 'OK') {
+        this.sendTokenToServer(this.charge)
+      }
     },
     sendTokenToServer (charge) {
       // Send to charge to your backend server to be processed
@@ -296,7 +299,7 @@ export default {
         'Content-Type': 'application/json'
       }
 
-      fetch('http://localhost:5000/payment', {
+      fetch('https://indigem.ca/payment', {
         method: 'POST',
         headers,
         body: JSON.stringify(charge)
@@ -308,12 +311,42 @@ export default {
             products: this.vendors,
             buyerName: this.customer.name
           })
-          this.activateShippingCode()
+          // this.activateShippingCode()
           this.$store.commit('emptyCart')
         }
       }).catch(e => {
         console.log(e)
       })
+    },
+    async checkAlreadyBought (vendors) {
+      this.isLoading = true
+      const headers = {
+        'Content-Type': 'application/json'
+      }
+      const request = await fetch('https://indigem.ca/checkAlreadyBought', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(vendors)
+      })
+      const result = await request.json()
+      if (result) {
+        this.isLoading = false
+        const alreadyBoughtProducts = []
+        for (const product of result) {
+          if (product.buyerName) {
+            alreadyBoughtProducts.push(product)
+          }
+        }
+        if (!alreadyBoughtProducts.length) {
+          return 'OK'
+        } else {
+          const products = []
+          for (const product of alreadyBoughtProducts) {
+            products.push(product.name)
+          }
+          alert(`Sorry, but ${products.join(', ')} has already been purchased`)
+        }
+      }
     }
   }
 }

@@ -85,7 +85,7 @@ export default {
       return total
     },
     totalSum () {
-      return this.$store.state.totalSum
+      return this.$store.state.totalSum.toFixed(2)
     },
     shipping () {
       return this.$store.state.shipping

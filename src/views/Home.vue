@@ -5,10 +5,11 @@
     </div>
     <div>
       <div class="row">
-        <div class="col-6">
-          <h3 class="font-weight-bold">{{ selectedCategory.name }}</h3>
+        <div class="col-lg-6">
+          <h1 class="title font-weight-bold">indiGem LIVE Sales</h1>
+          <h2 class="subtitle font-weight-bold">{{ selectedCategory.name }}</h2>
         </div>
-        <div class="col-6 align-self-center text-right">
+        <div class="col-lg-6 align-self-center text-lg-right">
           <router-link to="/cart" class="font-weight-bold link">
             <i class="fa fa-shopping-cart" aria-hidden="true"></i> View Cart <span v-if="cartLength">({{ cartLength }})</span>
           </router-link>
@@ -31,7 +32,7 @@
           <div class="col-lg-6">
             <div>
               <a class="link font-weight-medium" href="" @click.prevent="isShowDatesOpen = !isShowDatesOpen">
-                Select Show Dates <i class="arrow" :class="{ 'up-arrow': isShowDatesOpen, 'down-arrow': !isShowDatesOpen}"></i>
+                Select Show Date <i class="arrow" :class="{ 'up-arrow': isShowDatesOpen, 'down-arrow': !isShowDatesOpen}"></i>
               </a>
             </div>
             <transition name="fade">
@@ -75,16 +76,6 @@ import Footer from '@/components/Footer'
 
 export default {
   name: 'Home',
-  metaInfo () {
-    return {
-      meta: [
-        { vmid: 'og:url', property: 'og:url', content: 'https://rouzy777.github.io/airtable-shop/' },
-        { vmid: 'og:title', property: 'og:title', content: this.ogConfig.title },
-        { vmid: 'og:description', property: 'og:description', content: this.ogConfig.description },
-        { vmid: 'og:image', property: 'og:image', content: this.ogConfigImage }
-      ]
-    }
-  },
   components: {
     ProductCard,
     FloatingCart,
@@ -97,13 +88,11 @@ export default {
     isShowDatesOpen: false,
     isLoaded: false,
     currentPage: 1,
-    ogConfig: [],
-    ogConfigImage: '',
-    products: [],
     selectedShowDate: '',
     selectedCategory: '',
     showDates: [],
-    categories: []
+    categories: [],
+    products: []
   }),
   computed: {
     cartLength () {
@@ -115,27 +104,26 @@ export default {
     }
   },
   async created () {
-    this.getOGConfig()
     await this.getVendors()
-    if (this.$route.query.page || this.$route.query.keyword) {
-      if (this.$route.query.keyword) {
-        this.selectedCategory = this.categories.find(i => i.name === this.$route.query.keyword)
-      }
+    this.currentPage = this.$route.query.page || 1
+    if (this.$route.params.vendor || this.$route.query.date) {
+      const vendorWithSpaces = this.$route.params.vendor.replace(/_/g, ' ').replace(/amp;/g, '').toLowerCase()
+      this.selectedCategory = this.categories.find(i => i.name.toLowerCase() === vendorWithSpaces)
       this.getShowDates(this.selectedCategory)
       if (this.$route.query.date) {
         this.selectedShowDate = this.$route.query.date
       }
-      this.currentPage = this.$route.query.page
       this.getProducts({
         page: this.currentPage,
-        keyword: this.selectedCategory.name,
         baseid: this.selectedCategory.id,
         date: this.selectedShowDate
       })
     } else {
-      const result = await fetch('https://limitless-mountain-18309.herokuapp.com/all')
-      this.products = await result.json()
-      this.isLoaded = true
+      this.getShowDates(this.selectedCategory)
+      this.getProducts({
+        page: this.currentPage,
+        baseid: this.selectedCategory.id
+      })
     }
   },
   methods: {
@@ -148,7 +136,6 @@ export default {
       this.$router.push({ query: Object.assign({}, this.$route.query, { page: this.currentPage }) })
       this.getProducts({
         page: this.currentPage,
-        keyword: this.selectedCategory.name,
         baseid: this.selectedCategory.id,
         date: this.selectedShowDate
       })
@@ -156,21 +143,22 @@ export default {
     setShowDate () {
       this.getProducts({
         page: this.currentPage,
-        keyword: this.selectedCategory.name,
         baseid: this.selectedCategory.id,
         date: this.selectedShowDate
       })
     },
     searchByCategory (item) {
       if (this.selectedCategory !== item) {
+        const nameForUrl = item.name.replace(/ /g, '_').toLowerCase()
         this.getShowDates(item)
         this.selectedCategory = item
         this.currentPage = 1
         this.selectedShowDate = ''
-        this.$router.push({ query: { page: this.currentPage, keyword: item.name } })
+        this.$router.push({ name: 'Vendor', params: { vendor: nameForUrl } })
+        // for query vendors in route:
+        // this.$router.push({ query: { keyword: item.name } })
         this.getProducts({
           page: this.currentPage,
-          keyword: item.name,
           baseid: item.id
         })
       }
@@ -179,10 +167,9 @@ export default {
       if (this.selectedShowDate !== item) {
         this.selectedShowDate = item
         this.currentPage = 1
-        this.$router.push({ query: { page: this.currentPage, keyword: this.selectedCategory.name, date: item } })
+        this.$router.push({ query: { date: item } })
         this.getProducts({
           page: this.currentPage,
-          keyword: this.selectedCategory.name,
           baseid: this.selectedCategory.id,
           date: this.selectedShowDate
         })
@@ -194,12 +181,12 @@ export default {
         queryString += `${key}=${value}&`
       }
       this.isLoaded = false
-      const result = await fetch(`https://limitless-mountain-18309.herokuapp.com/all?${queryString}`)
+      const result = await fetch(`https://indigem.ca/all?${queryString}`)
       this.products = await result.json()
       this.isLoaded = true
     },
     async getVendors () {
-      const result = await fetch('https://limitless-mountain-18309.herokuapp.com/selectViews')
+      const result = await fetch('https://indigem.ca/selectViews')
       this.categories = await result.json()
       this.selectedCategory = this.categories[0]
     },
@@ -209,13 +196,8 @@ export default {
       if (vendor) {
         queryString = `vendor=${vendor.id}`
       }
-      const result = await fetch(`https://limitless-mountain-18309.herokuapp.com/getShowDates?${queryString}`)
+      const result = await fetch(`https://indigem.ca/getShowDates?${queryString}`)
       this.showDates = await result.json()
-    },
-    async getOGConfig () {
-      const result = await fetch('https://limitless-mountain-18309.herokuapp.com/getOGConfig')
-      this.ogConfig = (await result.json())[0]
-      this.ogConfigImage = this.ogConfig.image[0].url
     }
   }
 }
@@ -224,6 +206,14 @@ export default {
 <style media="screen">
   .font-weight-medium {
     font-weight: 500;
+  }
+
+  .title {
+    font-size: 30px;
+  }
+
+  .subtitle {
+    font-size: 28px;
   }
 
   .floating {
