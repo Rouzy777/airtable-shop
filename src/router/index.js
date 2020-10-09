@@ -20,6 +20,16 @@ const routes = [
     component: () => import('../views/Checkout.vue')
   },
   {
+    path: '/account',
+    name: 'Account',
+    component: () => import('../views/Account.vue')
+  },
+  {
+    path: '/signup',
+    name: 'Sign up',
+    component: () => import('../views/Signup.vue')
+  },
+  {
     path: '/:vendor',
     name: 'Vendor',
     component: () => import('../views/Home.vue')
@@ -27,6 +37,9 @@ const routes = [
 ]
 
 const router = new VueRouter({
+  scrollBehavior () {
+    return { x: 0, y: 0 }
+  },
   mode: 'history',
   base: process.env.BASE_URL,
   routes

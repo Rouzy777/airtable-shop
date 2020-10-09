@@ -1,14 +1,16 @@
 <template>
-  <div class="col-lg-3 col-12 pr-lg-4 pr-0 pl-0 mb-4">
+  <div class="col-lg-3 col-12 mb-4">
     <div class="card h-100 px-0 col-md-12">
-      <carousel :per-page="1" :adjustableHeight="videoLink !== false" :minSwipeDistance="50">
+      <carousel v-model="activeSlide" :per-page="1" :adjustableHeight="videoLink !== false" :minSwipeDistance="50">
         <slide v-if="product.picture">
-          <img class="card-img-top" v-img="{'src': product.picture[0].thumbnails.large.url, 'title': product['lot #']}" v-lazy="product.picture[0].thumbnails.large.url" alt="Image">
+          <img class="card-img-top" v-img="{'src': product.picture[0].thumbnails.large.url, 'title': product['lot #']}" v-lazy="product.picture[0].thumbnails.large.url" :alt="product['lot #']">
         </slide>
         <slide v-if="product.video">
           <video class="card-img-top video" controls>
-            <source :src="videoLink" type="video/mp4">
-            Your browser does not support the video tag.
+            <template v-if="activeSlide === isVideoOnly">
+              <source :src="videoLink" type="video/mp4">
+              Your browser does not support the video tag.
+            </template>
           </video>
         </slide>
       </carousel>
@@ -60,7 +62,8 @@ import { mapMutations } from 'vuex'
 
 export default {
   components: {
-    Carousel, Slide
+    Carousel,
+    Slide
   },
   props: {
     productRaw: {
@@ -75,6 +78,7 @@ export default {
   data: () => ({
     readAllActive: false,
     description: '',
+    activeSlide: 0,
     seoDescription: ''
   }),
   computed: {
@@ -82,6 +86,13 @@ export default {
       return Object.fromEntries(
         Object.entries(this.productRaw).map(([k, v]) => [k.toLowerCase(), v])
       )
+    },
+    isVideoOnly () {
+      if (this.product.video && this.product.picture) {
+        return 1
+      } else {
+        return 0
+      }
     },
     videoLink () {
       if (this.product.video && this.product.video.includes('dl=0')) {
@@ -132,5 +143,15 @@ export default {
 
   .pointer {
     cursor: pointer;
+  }
+
+  .video {
+    min-height: 440px !important;
+  }
+
+  @media screen and (max-width: 520px) {
+    .video {
+      min-height: 605px !important;
+    }
   }
 </style>

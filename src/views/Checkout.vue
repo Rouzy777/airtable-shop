@@ -18,7 +18,10 @@
       </div>
     </div>
     <transition name="fade">
-      <div v-if="!isPurchased" class="col-12 mb-3 mt-5 px-0">
+      <div v-if="!isPurchased" class="col-12 mb-3 mt-3 px-0">
+        <div v-if="isLogged" class="mb-3">
+          <small class="text-muted">Logged As <router-link to="/account">{{ customer.name }}</router-link></small>
+        </div>
         <div>
           <small>Name</small>
           <input
@@ -140,6 +143,7 @@
 </template>
 
 <script>
+import firebase from 'firebase/app'
 import Loader from '@/components/Loader'
 import { StripeElements } from 'vue-stripe-checkout'
 import { email, required } from 'vuelidate/lib/validators'
@@ -161,6 +165,8 @@ export default {
       postal_code: '',
       address2: ''
     },
+    isLogged: false,
+    userInfo: null,
     isLoading: false,
     isPurchased: false,
     publishableKey: 'pk_live_lp4AR0OUNJSqh8uMgDJ5gEAe00AR4zcSCx',
@@ -233,6 +239,7 @@ export default {
   },
   created () {
     if (this.cartLength) {
+      this.checkAuth()
       this.vendors = this.$store.state.cart
       this.$store.commit('calculateSum')
       if (sessionStorage.code) {
@@ -248,6 +255,26 @@ export default {
       'activateShippingCode',
       'setBuyerName'
     ]),
+    checkAuth () {
+      firebase.auth().onAuthStateChanged(async (user) => {
+        if (user) {
+          const uid = await this.$store.dispatch('getUserId')
+          this.userInfo = (await firebase.database().ref(`/users/${uid}/info`).once('value')).val()
+          this.customer.name = `${this.userInfo.first_name} ${this.userInfo.last_name}`
+          this.customer.email = this.userInfo.email
+          this.customer.address1 = this.userInfo.address
+          this.customer.city = this.userInfo.city
+          this.customer.state = this.userInfo.province
+          this.customer.region = this.userInfo.region
+          this.customer.phone = this.userInfo.phone
+          this.customer.postal_code = this.userInfo.postal_code
+          if (this.userInfo.apartment) {
+            this.customer.address2 = this.userInfo.apartment
+          }
+          this.isLogged = true
+        }
+      })
+    },
     submit () {
       if (this.$v.$invalid) { // validation
         this.$v.$touch()
@@ -311,6 +338,29 @@ export default {
             products: this.vendors,
             buyerName: this.customer.name
           })
+          if (this.isLogged) {
+            const date = Number(Date.now())
+            for (const vendor of this.vendors) {
+              if (vendor.products.length) { // set bought products to database
+                for (const item of vendor.products) {
+                  (async () => {
+                    const uid = await this.$store.dispatch('getUserId')
+                    let image = null
+                    if (item.picture.length) {
+                      image = item.picture[0].thumbnails.large.url
+                    }
+                    await firebase.database().ref(`/users/${uid}/products/${item['lot #']}`).set({
+                      image,
+                      date,
+                      vendor: vendor.vendor.name,
+                      product: item['lot #'],
+                      price: item['final price']
+                    })
+                  })()
+                }
+              }
+            }
+          }
           // this.activateShippingCode()
           this.$store.commit('emptyCart')
         }

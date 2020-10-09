@@ -10,9 +10,16 @@
           <h2 class="subtitle font-weight-bold">{{ selectedCategory.name }}</h2>
         </div>
         <div class="col-lg-6 align-self-center text-lg-right">
-          <router-link to="/cart" class="font-weight-bold link">
-            <i class="fa fa-shopping-cart" aria-hidden="true"></i> View Cart <span v-if="cartLength">({{ cartLength }})</span>
-          </router-link>
+          <div>
+            <router-link to="/cart" class="font-weight-bold link">
+              <i class="fa fa-shopping-cart" aria-hidden="true"></i> View Cart <span v-if="cartLength">({{ cartLength }})</span>
+            </router-link>
+          </div>
+          <div class="mt-2">
+            <router-link to="/account" class="font-weight-bold link">
+              <i class="fa fa-user-circle-o" aria-hidden="true"></i> Account
+            </router-link>
+          </div>
         </div>
       </div>
       <div class="mx-auto row mt-3">
@@ -28,8 +35,8 @@
             </div>
           </transition>
         </div>
-        <div class="row col-12 px-0 mt-3">
-          <div class="col-lg-6">
+        <div class="row mx-auto col-12 px-0 mt-3">
+          <div class="col-lg-6 px-0">
             <div>
               <a class="link font-weight-medium" href="" @click.prevent="isShowDatesOpen = !isShowDatesOpen">
                 Select Show Date <i class="arrow" :class="{ 'up-arrow': isShowDatesOpen, 'down-arrow': !isShowDatesOpen}"></i>
@@ -41,14 +48,21 @@
               </div>
             </transition>
           </div>
-          <div class="col-lg-6 text-lg-right mt-lg-0 mt-3">
+          <div class="col-lg-6 px-0 text-lg-right mt-lg-0 mt-3">
             <JoinBtn />
           </div>
         </div>
       </div>
     </div>
     <div v-if="isLoaded" class="row mx-auto col-12 my-3 px-0">
-      <ProductCard v-for="(item, i) of products" :key="`${item['Lot #']}-${i}`" :productRaw="item" :vendor="selectedCategory" />
+      <div class="row">
+        <ProductCard
+          v-for="(item, i) of products"
+          :key="`${item['Lot #']}-${i}`"
+          :productRaw="item"
+          :vendor="selectedCategory"
+        />
+      </div>
       <div class="col-12 text-center pr-4 pl-0">
         <button v-if="currentPage > 1" @click="changePage('down')" class="btn mr-2 btn-primary">
           <i class="fa fa-chevron-circle-left" aria-hidden="true"></i>
