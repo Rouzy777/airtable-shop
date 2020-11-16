@@ -1,6 +1,6 @@
 <template>
   <section class="content">
-    <div class="floating">
+    <div v-if="!isAuctionActive" class="floating">
       <FloatingCart />
     </div>
     <div>
@@ -60,17 +60,18 @@
           v-for="(item, i) of products"
           :key="`${item['Lot #']}-${i}`"
           :productRaw="item"
+          :user="userInfo"
           :vendor="selectedCategory"
         />
       </div>
       <div class="col-12 text-center pr-4 pl-0">
         <button v-if="currentPage > 1" @click="changePage('down')" class="btn mr-2 btn-primary">
-          <i class="fa fa-chevron-circle-left" aria-hidden="true"></i>
+          <i class="fa fa-chevron-circle-left" aria-hidden="true" />
           Prev Page
         </button>
         <button v-if="products.length > 80" @click="changePage('up')" class="btn btn-primary" :class="{'ml-2': this.currentPage > 1}">
           Next Page
-          <i class="fa fa-chevron-circle-right" aria-hidden="true"></i>
+          <i class="fa fa-chevron-circle-right" aria-hidden="true" />
         </button>
       </div>
     </div>
@@ -82,6 +83,7 @@
 </template>
 
 <script>
+import firebase from 'firebase/app'
 import ProductCard from '@/components/ProductCard'
 import FloatingCart from '@/components/FloatingCart'
 import JoinBtn from '@/components/JoinBtn'
@@ -106,7 +108,8 @@ export default {
     selectedCategory: '',
     showDates: [],
     categories: [],
-    products: []
+    products: [],
+    userInfo: {}
   }),
   computed: {
     cartLength () {
@@ -115,9 +118,13 @@ export default {
         total += vendor.products.length
       }
       return total
+    },
+    isAuctionActive () {
+      return this.$store.state.isModalActive
     }
   },
   async created () {
+    this.getUserInfo()
     await this.getVendors()
     this.currentPage = this.$route.query.page || 1
     if (this.$route.params.vendor || this.$route.query.date) {
@@ -141,6 +148,14 @@ export default {
     }
   },
   methods: {
+    getUserInfo () {
+      firebase.auth().onAuthStateChanged(async (user) => {
+        if (user) {
+          const uid = user.uid
+          this.userInfo = (await firebase.database().ref(`/users/${uid}/info`).once('value')).val()
+        }
+      })
+    },
     changePage (direction) {
       if (direction === 'up') {
         this.currentPage++
@@ -190,12 +205,15 @@ export default {
       }
     },
     async getProducts (query) {
-      let queryString = ''
-      for (const [key, value] of Object.entries(query)) {
-        queryString += `${key}=${value}&`
-      }
+      // let queryString = ''
+      // for (const [key, value] of Object.entries(query)) {
+      //   queryString += `${key}=${value}&`
+      // }
       this.isLoaded = false
-      const result = await fetch(`https://indigem.ca/all?${queryString}`)
+      // FOR PRODUCTION
+      // const result = await fetch(`https://indigem.ca/all?${queryString}`)
+      // FOR TESTING
+      const result = await fetch('/all')
       this.products = await result.json()
       this.isLoaded = true
     },

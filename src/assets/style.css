@@ -15,7 +15,102 @@
   position: absolute;
   bottom: 3px;
   font-family: FontAwesome;
-  content: "\f03d";
+  content: '\f03d';
+}
+
+.social-logo {
+  font-size: 32px;
+}
+
+.font-weight-medium {
+  font-weight: 500;
+}
+
+.not-paid:before, .paid:before {
+  content: '●';
+}
+
+.not-paid:before {
+  color: #dc3545;
+}
+
+.paid:before {
+  color: #28a745;
+}
+
+.bg-lightgray {
+  background-color: rgba(0,0,0,.03);
+}
+
+.table thead th {
+  font-weight: 500;
+  border-top: 0;
+  border-bottom: 0;
+}
+
+.table thead th:nth-child(1) {
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+
+.table thead th:nth-last-child(-n+1) {
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+@media only screen and (min-width: 993px) {
+  .table tbody tr td {
+    border-top: 1px solid #eee;
+  }
+  .table tbody tr:nth-child(1) td {
+    border-top: 0;
+  }
+}
+
+@media only screen and (max-width: 993px) {
+  /* Force table to not be like tables anymore */
+  .table table,
+  .table thead,
+  .table tbody,
+  .table th,
+  .table td,
+  .table tr {
+    display: block;
+  }
+  /* Hide table headers (but not display: none;, for accessibility) */
+  .table thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+  .table td {
+    /* Behave  like a "row" */
+    border: none;
+    position: relative;
+    padding-left: 50%;
+    white-space: normal;
+    text-align: left;
+  }
+  .table tbody tr td:not(:last-of-type) {
+    border-bottom: 1px solid #eee;
+  }
+  .table tbody tr {
+    background-color: white;
+    border-radius: 10px;
+  }
+  .table td:before {
+    /* Now like a table header */
+    position: absolute;
+    /* Top/left values mimic padding */
+    left: 15px;
+    width: 45%;
+    padding-right: 10px;
+    text-align: left;
+    font-weight: 500;
+  }
+  .table td:before {
+    content: attr(data-title);
+  }
 }
 
 .fb_dialog_content iframe, .fb-customerchat iframe {
@@ -47,5 +142,11 @@
       opacity: 1;
       transform: scale(1, 1);
       transform-origin: bottom left;
+  }
+}
+
+@media (min-width: 576px) {
+  .modal-dialog {
+    max-width: 800px !important;
   }
 }

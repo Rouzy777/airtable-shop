@@ -23,14 +23,14 @@
           <small class="text-muted">Logged As <router-link to="/account">{{ customer.name }}</router-link></small>
         </div>
         <div>
-          <small>Name</small>
+          <small>Name*</small>
           <input
             v-model="customer.name"
             :class="{'border-danger': ($v.customer.name.$dirty && !$v.customer.name.required)}"
             class="col-sm-5 form-control">
         </div>
         <div class="mt-3">
-          <small>Email</small>
+          <small>Email*</small>
           <input
             v-model="customer.email"
             :class="{'border-danger': ($v.customer.email.$dirty && !$v.customer.email.required) || ($v.customer.email.$dirty && !$v.customer.email.email)}"
@@ -41,7 +41,7 @@
           <span class="text-muted">Shipping Address</span>
           <div class="border rounded p-3">
             <div>
-              <small>Address</small>
+              <small>Address*</small>
               <input
                 v-model="customer.address1"
                 :class="{'border-danger': ($v.customer.address1.$dirty && !$v.customer.address1.required)}"
@@ -52,7 +52,7 @@
                 v-model="customer.address2"
                 class="col mb-2 form-control"
               >
-              <small>City</small>
+              <small>City*</small>
               <input
                 v-model="customer.city"
                 :class="{'border-danger': ($v.customer.city.$dirty && !$v.customer.city.required)}"
@@ -61,7 +61,7 @@
             </div>
             <div class="row mt-3">
               <div class="col-md">
-                <small>Country/Region</small>
+                <small>Country/Region*</small>
                 <select
                   v-model="customer.region"
                   :class="{'border-danger': ($v.customer.region.$dirty && !$v.customer.region.required)}"
@@ -73,7 +73,7 @@
               </div>
               <div class="col-md-8 px-0 mx-auto row">
                 <div class="col-md">
-                  <small>{{ regionWords[0] }}</small>
+                  <small>{{ regionWords[0] }}*</small>
                   <input
                     v-model="customer.state"
                     :class="{'border-danger': ($v.customer.state.$dirty && !$v.customer.state.required)}"
@@ -81,7 +81,7 @@
                   >
                 </div>
                 <div class="col-md">
-                  <small>{{ regionWords[1] }}</small>
+                  <small>{{ regionWords[1] }}*</small>
                   <input
                     v-model="customer.postal_code"
                     :class="{'border-danger': ($v.customer.postal_code.$dirty && !$v.customer.postal_code.required)}"
@@ -103,9 +103,13 @@
                   :amount="totalSum"
                   class="col-lg-6 px-0"
                   locale="en"
+                  @change="cardErrorMsg = ''"
                   @token="tokenCreated"
                   @loading="loading = $event"
                 >
+                  <template v-slot:card-errors>
+                    <div id="card-errors" class="text-danger" role="alert" />
+                  </template>
                 </stripe-elements>
                 <div class="payment-info text-muted">
                   <span>You agree to pay: </span>
@@ -125,7 +129,7 @@
                   </ul>
                   <span>Your purchase is handled securely with Stripe. We do not save your credit card information.</span>
                 </div>
-                <div v-if="!isLoading" class="">
+                <div v-if="!isLoading" class="text-md-left text-center">
                   <button class="btn btn-primary mt-3" @click="submit">PAY WITH CREDIT CARD</button>
                 </div>
                 <Loader v-else class="mt-2" />
@@ -169,10 +173,11 @@ export default {
     userInfo: null,
     isLoading: false,
     isPurchased: false,
-    publishableKey: 'pk_live_lp4AR0OUNJSqh8uMgDJ5gEAe00AR4zcSCx',
+    publishableKey: 'pk_test_51HIXxmJh065ah3GR1L16eFe1Lgc0Et14Spn4d68RQAPCXlAot15XWpOs92v3OoaPHk5kYP1XP8UYyzg9x4viXzc900q7fSv5r5',
     vendors: [],
     token: null,
-    charge: null
+    charge: null,
+    cardErrorMsg: ''
   }),
   validations: {
     customer: {
@@ -280,6 +285,8 @@ export default {
         this.$v.$touch()
         return
       }
+      const displayError = document.getElementById('card-errors')
+      displayError.textContent = ''
       this.$refs.elementsRef.submit()
     },
     async tokenCreated (token) {
@@ -318,26 +325,27 @@ export default {
         this.sendTokenToServer(this.charge)
       }
     },
-    sendTokenToServer (charge) {
+    async sendTokenToServer (charge) {
       // Send to charge to your backend server to be processed
       // Documentation here: https://stripe.com/docs/api/charges/create
       this.isLoading = true
       const headers = {
         'Content-Type': 'application/json'
       }
-
-      fetch('https://indigem.ca/payment', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(charge)
-      }).then(response => {
-        if (response.status === 200) {
+      try {
+        const request = await fetch('/payment', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(charge)
+        })
+        if (request.ok) {
           this.isLoading = false
           this.isPurchased = true
-          this.setBuyerName({
-            products: this.vendors,
-            buyerName: this.customer.name
-          })
+          // just for dev
+          // this.setBuyerName({
+          //   products: this.vendors,
+          //   buyerName: this.customer.name
+          // })
           if (this.isLogged) {
             const date = Number(Date.now())
             for (const vendor of this.vendors) {
@@ -348,6 +356,11 @@ export default {
                     let image = null
                     if (item.picture.length) {
                       image = item.picture[0].thumbnails.large.url
+                    }
+                    if (item['auction lot']) {
+                      firebase.database().ref(`/users/${uid}/auctions/${item['lot #']}`).update({
+                        status: 'Paid'
+                      })
                     }
                     await firebase.database().ref(`/users/${uid}/products/${item['lot #']}`).set({
                       image,
@@ -361,12 +374,16 @@ export default {
               }
             }
           }
-          // this.activateShippingCode()
           this.$store.commit('emptyCart')
+        } else {
+          throw request
         }
-      }).catch(e => {
-        console.log(e)
-      })
+      } catch (e) {
+        const error = await e.text()
+        const displayError = document.getElementById('card-errors')
+        displayError.textContent = error
+        this.isLoading = false
+      }
     },
     async checkAlreadyBought (vendors) {
       this.isLoading = true

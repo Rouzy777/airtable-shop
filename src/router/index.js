@@ -30,15 +30,34 @@ const routes = [
     component: () => import('../views/Signup.vue')
   },
   {
+    path: '/reset',
+    name: 'Reset',
+    component: () => import('../views/Reset.vue')
+  },
+  {
     path: '/:vendor',
     name: 'Vendor',
+    component: () => import('../views/Home.vue'),
+    children: [
+      {
+        path: 'auctions/:auction',
+        name: 'Vendor auction',
+        component: () => import('../views/Home.vue')
+      }
+    ]
+  },
+  {
+    path: '/auctions/:auction',
+    name: 'Auction',
     component: () => import('../views/Home.vue')
   }
 ]
 
 const router = new VueRouter({
-  scrollBehavior () {
-    return { x: 0, y: 0 }
+  scrollBehavior (to, from) {
+    if (!from.path.includes('auctions') && !to.path.includes('auctions')) {
+      return { x: 0, y: 0 }
+    }
   },
   mode: 'history',
   base: process.env.BASE_URL,

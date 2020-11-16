@@ -41,7 +41,7 @@
             </div>
             <div class="col-lg mt-lg-0 mt-3">
               <small>Phone*</small>
-              <input type="tel" class="form-control" v-model="user.phone" required>
+              <input type="number" class="form-control" v-model="user.phone" required>
             </div>
           </div>
           <div class="row mt-3">
@@ -59,7 +59,9 @@
               <small>Address*</small>
               <input class="form-control" v-model="user.address" required>
             </div>
-            <div class="col-lg mt-lg-0 mt-3">
+          </div>
+          <div class="mt-3 row">
+            <div class="col-lg">
               <small>City*</small>
               <input class="form-control" v-model="user.city" required>
             </div>
@@ -93,7 +95,7 @@
           <div class="text-center mt-4">
             <button type="submit" class="btn btn-primary">Sign Up</button>
             <div class="text-muted mt-3">
-              <small>OR <router-link to="/account/">SIGN IN</router-link> </small>
+              <small>OR <router-link to="/account">SIGN IN</router-link> </small>
             </div>
           </div>
         </form>

@@ -4,6 +4,8 @@ import VueLazyload from 'vue-lazyload'
 import Vuelidate from 'vuelidate'
 import VueImg from 'v-img'
 import VueFbCustomerChat from 'vue-fb-customer-chat'
+import Bugsnag from '@bugsnag/js'
+import BugsnagPluginVue from '@bugsnag/plugin-vue'
 
 import firebase from 'firebase/app'
 import 'firebase/auth'
@@ -16,6 +18,14 @@ import 'bootstrap'
 
 import router from './router'
 import store from './store'
+
+Bugsnag.start({
+  apiKey: '27d86f8fb18f0889821bb2c106b7cfc4',
+  plugins: [new BugsnagPluginVue()]
+})
+
+Bugsnag.getPlugin('vue')
+  .installVueErrorHandler(Vue)
 
 Vue.use(VueLazyload, {
   preLoad: 1.5,

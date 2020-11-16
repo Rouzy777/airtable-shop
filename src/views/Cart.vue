@@ -102,6 +102,7 @@ export default {
   created () {
     this.vendors = this.$store.state.cart
     this.calculateSum()
+    this.$store.commit('setErrorMessage', '')
     if (sessionStorage.code) {
       this.checkShippingCode(sessionStorage.code)
     }
@@ -114,27 +115,6 @@ export default {
       'checkShippingCode'
     ])
   }
-  // watch: {
-  //   vendors: {
-  //     handler: function (newData) {
-  //       let total = 0
-  //       this.shipping = 0
-  //       for (const item of newData) {
-  //         const vendorSum = item.products.reduce(function (acc, obj) { return acc + Math.round(obj['Final Price']) }, 0)
-  //         total += vendorSum
-  //         if (vendorSum < 100) {
-  //           this.shipping += 15
-  //         }
-  //       }
-  //       this.totalSum = total + this.shipping
-  //       // this.totalSum = newData.reduce(function (acc, obj) { return acc + Math.round(obj['Final Price']) }, 0)
-  //       // if (this.totalSum < 100) {
-  //       //   this.shipping = 15
-  //       // }
-  //     },
-  //     deep: true
-  //   }
-  // }
 }
 </script>
 

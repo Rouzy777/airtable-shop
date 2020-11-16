@@ -10,6 +10,7 @@ export default new Vuex.Store({
     totalSum: 0,
     shipping: 0,
     code: '',
+    isModalActive: false,
     errorCodeMessage: ''
   },
   mutations: {
@@ -26,7 +27,14 @@ export default new Vuex.Store({
         state.cart[vendorIndex].products.push(product)
       }
       this.commit('calculateSum') // calculate sum and shipping cost
-      sessionStorage.cart = JSON.stringify(state.cart)
+      // filter server lots
+      const filteredCart = state.cart.map((vendor) => {
+        return {
+          ...vendor,
+          products: vendor.products.filter(product => !product.serverlot)
+        }
+      })
+      sessionStorage.cart = JSON.stringify(filteredCart)
     },
     removeFromCart (state, product) {
       const vendor = product.vendor
@@ -35,7 +43,14 @@ export default new Vuex.Store({
       const index = state.cart[vendorIndex].products.findIndex(i => JSON.stringify(i) === JSON.stringify(product))
       state.cart[vendorIndex].products.splice(index, 1)
       this.commit('calculateSum') // calculate sum and shipping cost
-      sessionStorage.cart = JSON.stringify(state.cart)
+      // filter server lots
+      const filteredCart = state.cart.map((vendor) => {
+        return {
+          ...vendor,
+          products: vendor.products.filter(product => !product.serverlot)
+        }
+      })
+      sessionStorage.cart = JSON.stringify(filteredCart)
     },
     restoreCart (state, cartMemory) {
       state.cart = JSON.parse(cartMemory)
@@ -61,7 +76,6 @@ export default new Vuex.Store({
     setFreeShipping (state, code) {
       state.shipping = 0
       state.code = code
-      sessionStorage.cart = JSON.stringify(state.cart)
       sessionStorage.code = state.code
     },
     setErrorMessage (state, message) {
@@ -72,17 +86,18 @@ export default new Vuex.Store({
     async checkShippingCode ({ commit }, code) {
       commit('setErrorMessage', '')
       try {
-        const result = await fetch(`https://indigem.ca/checkFreeShipping?code=${code}`)
+        const result = await fetch(`/checkFreeShipping?code=${code}`)
         const codeObject = await result.json()
-        if (codeObject && codeObject.used.toLowerCase() === 'no') {
+        if (codeObject && codeObject.used && codeObject.used.toLowerCase() === 'no') {
           commit('setFreeShipping', code)
           commit('calculateSum')
+        } else if (codeObject && codeObject.not_found) {
+          commit('setErrorMessage', `Code ${code} not found`)
         } else {
           commit('setErrorMessage', `Code ${code} is disabled`)
         }
       } catch (e) {
-        commit('setErrorMessage', `Code ${code} not found`)
-        throw e
+        throw new Error(e)
       }
     },
     // async activateShippingCode ({ commit, state }) {
